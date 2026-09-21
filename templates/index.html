@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Political Hate Speech Monitor</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f5f7;
+            color: #202124;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+
+        header {
+            background: #17191c;
+            color: white;
+            padding: 28px 8%;
+            border-bottom: 1px solid #2c2f33;
+        }
+
+        .header-content {
+            max-width: 1100px;
+            margin: auto;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .subtitle {
+            margin-top: 8px;
+            color: #aeb4bb;
+            font-size: 14px;
+        }
+
+
+        /* MAIN */
+
+        main {
+            max-width: 1100px;
+            margin: 50px auto;
+            padding: 0 25px;
+        }
+
+
+        /* SEARCH */
+
+        .search-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .search-section h1 {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+
+        .search-section p {
+            color: #6c727a;
+            margin-bottom: 28px;
+        }
+
+        .search-box {
+            display: flex;
+            max-width: 650px;
+            margin: auto;
+            background: white;
+            padding: 6px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 15px;
+            font-size: 16px;
+            border-radius: 8px;
+        }
+
+        .search-box button {
+            border: none;
+            background: #17191c;
+            color: white;
+            padding: 0 28px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .search-box button:hover {
+            background: #30343a;
+        }
+
+
+        /* STATISTICS */
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 22px;
+            border-radius: 10px;
+            border: 1px solid #e2e4e7;
+        }
+
+        .stat-title {
+            color: #777d84;
+            font-size: 13px;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 25px;
+            font-weight: 700;
+        }
+
+
+        /* TOXICITY */
+
+        .toxicity-card {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            border: 1px solid #e2e4e7;
+            margin-bottom: 30px;
+        }
+
+        .toxicity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .toxicity-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .toxicity-level {
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .toxicity-bar {
+            width: 100%;
+            height: 12px;
+            background: #e5e7ea;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .toxicity-fill {
+            height: 100%;
+            width: {{ toxicity_score or 0 }}%;
+            background: #d64545;
+            border-radius: 10px;
+        }
+
+        .toxicity-score {
+            margin-top: 10px;
+            font-size: 13px;
+            color: #6c727a;
+        }
+
+
+        /* COMMENTS */
+
+        .results-title {
+            margin-bottom: 20px;
+            font-size: 21px;
+        }
+
+        .comment-card {
+            background: white;
+            border: 1px solid #e2e4e7;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 15px;
+        }
+
+        .comment-text {
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .comment-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 6px 11px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #eef0f2;
+        }
+
+        .tag-hate {
+            background: #f9dddd;
+            color: #9f2727;
+        }
+
+        .tag-safe {
+            background: #e1f2e6;
+            color: #24733a;
+        }
+
+        .tag-negative {
+            background: #f9e4e4;
+            color: #9f2727;
+        }
+
+        .tag-neutral {
+            background: #eceff2;
+            color: #555b62;
+        }
+
+        .tag-positive {
+            background: #e1f2e6;
+            color: #24733a;
+        }
+
+
+        /* EMPTY STATE */
+
+        .empty {
+            text-align: center;
+            padding: 70px 20px;
+            color: #777d84;
+        }
+
+
+        /* FOOTER */
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: #8a9097;
+            font-size: 13px;
+        }
+
+
+        /* RESPONSIVE */
+
+        @media (max-width: 800px) {
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .search-section h1 {
+                font-size: 28px;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <div class="header-content">
+
+        <div class="logo">
+            Political Hate Speech Monitor
+        </div>
+
+        <div class="subtitle">
+            NLP-based exploration of Albanian political comments
+        </div>
+
+    </div>
+
+</header>
+
+
+<main>
+
+
+    <section class="search-section">
+
+        <h1>Explore Political Comments</h1>
+
+        <p>
+            Search for a word or phrase and analyze its toxicity.
+        </p>
+
+
+        <form method="POST" class="search-box">
+
+            <input
+                type="text"
+                name="keyword"
+                placeholder="e.g. tradhtar, hajdut, kriminel..."
+                value="{{ keyword }}"
+                required
+            >
+
+            <button type="submit">
+                Search
+            </button>
+
+        </form>
+
+    </section>
+
+
+    {% if results is not none %}
+
+
+        <h2 class="results-title">
+            Results for "{{ keyword }}"
+        </h2>
+
+
+        <!-- STATISTICS -->
+
+        <section class="stats">
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    COMMENTS FOUND
+                </div>
+
+                <div class="stat-value">
+                    {{ total_comments }}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    HATE SPEECH
+                </div>
+
+                <div class="stat-value">
+                    {{ hate_speech_count }}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    NEGATIVE
+                </div>
+
+                <div class="stat-value">
+                    {{ negative_count }}
+                </div>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <div class="stat-title">
+                    TOXICITY
+                </div>
+
+                <div class="stat-value">
+                    {{ "%.1f"|format(toxicity_score) }}%
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- TOXICITY -->
+
+        <section class="toxicity-card">
+
+            <div class="toxicity-header">
+
+                <div class="toxicity-title">
+                    Toxicity Level
+                </div>
+
+                <div class="toxicity-level">
+                    {{ toxicity_level }}
+                </div>
+
+            </div>
+
+
+            <div class="toxicity-bar">
+
+                <div class="toxicity-fill"></div>
+
+            </div>
+
+
+            <div class="toxicity-score">
+                Toxicity score:
+                {{ "%.1f"|format(toxicity_score) }}%
+            </div>
+
+        </section>
+
+
+        <!-- COMMENTS -->
+
+        {% for index, row in results.iterrows() %}
+
+            <article class="comment-card">
+
+                <div class="comment-text">
+
+                    {{ row["Comment i Pastruar"] }}
+
+                </div>
+
+
+                <div class="comment-meta">
+
+
+                    {% if row["Hate Speech"]|string|lower == "true" %}
+
+                        <span class="tag tag-hate">
+                            Hate Speech
+                        </span>
+
+                    {% else %}
+
+                        <span class="tag tag-safe">
+                            No Hate Speech
+                        </span>
+
+                    {% endif %}
+
+
+                    {% if row["Sent. Anal. Category"]|string|lower == "negative" %}
+
+                        <span class="tag tag-negative">
+                            Negative
+                        </span>
+
+                    {% elif row["Sent. Anal. Category"]|string|lower == "positive" %}
+
+                        <span class="tag tag-positive">
+                            Positive
+                        </span>
+
+                    {% else %}
+
+                        <span class="tag tag-neutral">
+                            Neutral
+                        </span>
+
+                    {% endif %}
+
+
+                </div>
+
+            </article>
+
+        {% endfor %}
+
+
+    {% else %}
+
+
+        <div class="empty">
+
+            <h2>Search the dataset</h2>
+
+            <p>
+                Enter a political term above to explore matching comments.
+            </p>
+
+        </div>
+
+
+    {% endif %}
+
+
+</main>
+
+
+<footer>
+
+    Albanian Political Hate Speech Monitor
+    ·
+    NLP Research Project
+
+</footer>
+
+
+</body>
+
+</html>
